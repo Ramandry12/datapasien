@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Input dan Output</title>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.0"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <style>
+    .new-data {
+      background-color: yellow;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .delete-button {
+      padding: 2px 6px;
+      font-size: 12px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Gaya cetak khusus */
+    @media print {
+      th {
+        white-space: nowrap;
+      }
+
+      td, th {
+        padding: 4px;
+      }
+    }
+  </style>
+</head>
+<body x-data="{ tab: 'input' }">
+  <h1>Data Pasien</h1>
+  <div>
+    <button x-on:click="tab = 'input'" :class="{ 'active': tab === 'input' }">Input Data</button>
+    <button x-on:click="tab = 'output'" :class="{ 'active': tab === 'output' }">Output Data</button>
+  </div>
+  <div x-show="tab === 'input'">
+    <h2>Input Data Pasien</h2>
+    <form id="formPasien">
+      <label for="noRM">No RM:</label>
+      <input type="text" id="noRM" required>
+      <label for="nama">Nama:</label>
+      <input type="text" id="nama" required>
+      <label for="poli">Poli:</label>
+      <input type="text" id="poli" required>
+      <label for="status">Baru/Lama:</label>
+      <select id="status" required>
+        <option value="baru">Baru</option>
+        <option value="lama">Lama</option>
+      </select>
+      <button type="submit">Tambah</button>
+    </form>
+  </div>  
+  <div x-show="tab === 'output'">
+    <h2>Output Data Pasien</h2>
+    <table style="border-collapse: collapse; width: 100%;">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>No RM</th>
+          <th>Nama</th>
+          <th>Poli</th>
+          <th>Baru/Lama</th>
+          <th>Tgl Distribusi</th>
+          <th>Tgl Kembali</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbodyPasien"></tbody>
+    </table>
+    <button onclick="printTable()">Cetak</button>
+  </div>
+  <script>
+    const formPasien = document.getElementById('formPasien');
+    const tbodyPasien = document.getElementById('tbodyPasien');
+    const dataPasien = [];
+
+    formPasien.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const noRM = document.getElementById('noRM').value;
+      const nama = document.getElementById('nama').value;
+      const poli = document.getElementById('poli').value;
+      const status = document.getElementById('status').value;
+
+      const pasien = {
+        noRM,
+        nama,
+        poli,
+        status,
+        tglDistribusi: '',
+        tglKembali: ''
+      };
+
+      dataPasien.push(pasien);
+
+      updateTable();
+
+      document.getElementById('noRM').value = '';
+      document.getElementById('nama').value = '';
+      document.getElementById('poli').value = '';
+      document.getElementById('status').value = 'baru';
+    });
+
+    function deleteDataPasien(index) {
+      dataPasien.splice(index, 1);
+      updateTable();
+    }
+
+    function updateTable() {
+      tbodyPasien.innerHTML = '';
+
+      if (dataPasien.length > 0) {
+        dataPasien.forEach(function(pasien, index) {
+          const row = document.createElement('tr');
+          const noCell = document.createElement('td');
+          const noRMCell = document.createElement('td');
+          const namaCell = document.createElement('td');
+          const poliCell = document.createElement('td');
+          const statusCell = document.createElement('td');
+          const tglDistribusiCell = document.createElement('td');
+          const tglKembaliCell = document.createElement('td');
+          const actionCell = document.createElement('td');
+
+          noCell.textContent = index + 1;
+          noRMCell.textContent = pasien.noRM;
+          namaCell.textContent = pasien.nama;
+          poliCell.textContent = pasien.poli;
+          statusCell.textContent = pasien.status;
+
+          const tglDistribusiInput = document.createElement('input');
+          tglDistribusiInput.setAttribute('type', 'text');
+          tglDistribusiInput.setAttribute('placeholder', 'Pilih Tgl Distribusi');
+          tglDistribusiInput.setAttribute('readonly', 'readonly');
+          tglDistribusiInput.classList.add('datepicker');
+
+          tglDistribusiInput.addEventListener('change', function() {
+            pasien.tglDistribusi = this.value;
+            updateTable();
+          });
+
+          const tglKembaliInput = document.createElement('input');
+          tglKembaliInput.setAttribute('type', 'text');
+          tglKembaliInput.setAttribute('placeholder', 'Pilih Tgl Kembali');
+          tglKembaliInput.setAttribute('readonly', 'readonly');
+          tglKembaliInput.classList.add('datepicker');
+
+          tglKembaliInput.addEventListener('change', function() {
+            pasien.tglKembali = this.value;
+            updateTable();
+          });
+
+          tglDistribusiCell.appendChild(tglDistribusiInput);
+          tglKembaliCell.appendChild(tglKembaliInput);
+
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.classList.add('delete-button');
+          deleteButton.addEventListener('click', function() {
+            deleteDataPasien(index);
+          });
+
+          actionCell.appendChild(deleteButton);
+
+          row.appendChild(noCell);
+          row.appendChild(noRMCell);
+          row.appendChild(namaCell);
+          row.appendChild(poliCell);
+          row.appendChild(statusCell);
+          row.appendChild(tglDistribusiCell);
+          row.appendChild(tglKembaliCell);
+          row.appendChild(actionCell);
+
+          tbodyPasien.appendChild(row);
+
+          flatpickr(tglDistribusiInput, {
+            dateFormat: 'Y-m-d',
+            allowInput: true
+          });
+          flatpickr(tglKembaliInput, {
+            dateFormat: 'Y-m-d',
+            allowInput: true
+          });
+
+          tglDistribusiInput.value = pasien.tglDistribusi;
+          tglKembaliInput.value = pasien.tglKembali;
+
+          if (index === dataPasien.length - 1) {
+            row.classList.add('new-data');
+          }
+        });
+      }
+    }
+
+    function printTable() {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.open();
+      printWindow.document.write(`
+        <html>
+        <head>
+          <title>Data Pasien - Cetak</title>
+          <style>
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>Output Data Pasien</h2>
+          <table style="border-collapse: collapse; width: 100%;">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>No RM</th>
+                <th>Nama</th>
+                <th>Poli</th>
+                <th>Baru/Lama</th>
+                <th>Tgl Distribusi</th>
+                <th>Tgl Kembali</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${generatePrintTableRows()}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    function generatePrintTableRows() {
+      let rows = '';
+
+      if (dataPasien.length > 0) {
+        dataPasien.forEach(function(pasien, index) {
+          const row = `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${pasien.noRM}</td>
+              <td>${pasien.nama}</td>
+              <td>${pasien.poli}</td>
+              <td>${pasien.status}</td>
+              <td>${pasien.tglDistribusi}</td>
+              <td>${pasien.tglKembali}</td>
+            </tr>
+          `;
+          rows += row;
+        });
+      }
+
+      return rows;
+    }
+
+    updateTable();
+  </script>
+</body>
+</html>
